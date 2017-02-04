@@ -3,12 +3,24 @@ import { ListBuffer } from '../mutable/ListBuffer'
 // List prototype
 
 const _List = {
-  get length() {},
+  get length() {
+    let len = 0, self = this
+    while (!self.isEmpty) {
+      self = self.tail
+      len++
+    }
+    return len
+  },
   get init() {},
-  get last() {},
+  get last() {
+    let self = this
+    while (!self.tail.isEmpty) {
+      self = self.tail
+    }
+    return self.head
+  },
   get reverse() {},
-  get toString() {},
-  get toArray() {},
+
   append(xs) {},
   drop(n) {},
   dropRight(n) {},
@@ -24,7 +36,13 @@ const _List = {
 
   map(fn) {},
   // flatMap(fn) {},
-  foreach(fn) {},
+  foreach(fn) {
+    let self = this
+    while (!self.isEmpty) {
+      fn(self.head)
+      self = self.tail
+    }
+  },
 
   filter(p) {},
   partition(p) {},
@@ -46,46 +64,59 @@ const _List = {
   min() {},
   sum() {},
 
+  toString() {},
+  toArray() {},
   mkString(pre, sep, post) {}
 }
 
 // Empty List
 
-const Nil = {
-  get isEmpty() {
-    return true
+const Nil = Object.create(_List)
+Object.defineProperties(Nil, {
+  isEmpty: {
+    get() {
+      return true
+    }
   },
-  get head() {
-    throw "head of empty list"
+  head: {
+    get() {
+      throw "head of empty list"
+    }
   },
-  get tail() {
-    throw "tail of empty list"
+  tail: {
+    get() {
+      throw "tail of empty list"
+    }
   }
-}
-
-Nil.prototype = Object.create(_List.prototype)
+})
 Object.freeze(Nil)
 
 // Nonempty List
 
-const _Cons = {
-  get isEmpty() {
-    return false
+const _Cons = Object.create(_List)
+Object.defineProperties(_Cons, {
+  isEmpty: {
+    get() {
+      return false
+    }
   },
-  get head() {
-    return this.hd;
+  head: {
+    get() {
+      return this.hd
+    }
   },
-  get tail() {
-    return this.tl;
+  tail: {
+    get() {
+      return this.tl
+    }
   }
-}
-
-_Cons.prototype = Object.create(_List.prototype)
+})
+Object.freeze(_Cons)
 
 // Factory Methods
 
 const Cons = function(hd, tl) {
-  if (_List.isProtoTypeOf(tl)) {
+  if (tl === Nil || _Cons.isPrototypeOf(tl)) {
     const _cons = Object.create(_Cons)
     _cons.hd = hd
     _cons.tl = tl
@@ -96,11 +127,29 @@ const Cons = function(hd, tl) {
   }
 }
 
-const List = function(...args) {}
+const List = function(...args) {
+  let _list = Nil
+  for (let i = args.length - 1; i >= 0; i--) {
+    _list = Cons(args[i], _list)
+  }
+  return _list
+}
 
-List.range = function(from, until, step) {}
+List.range = function(from, until, step = 1) {
+  let _list = Nil
+  for (let i = until; i >= from; i -= step) {
+    _list = Cons(i, _List)
+  }
+  return _list
+}
 
-List.make = function(n, item) {}
+List.make = function(n, item) {
+  let _list = Nil
+  while (n--) {
+    _list = Cons(item, _list)
+  }
+  return _list
+}
 
 List.concat = function(...args) {}
 
